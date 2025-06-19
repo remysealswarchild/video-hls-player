@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Video Streaming Demo</title>
+  <style>
+    body {
+      background: #1e1e1e;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    video {
+      margin-top: 20px;
+      width: 80%;
+      max-width: 800px;
+      border-radius: 12px;
+    }
+    select {
+      margin-top: 15px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      background: #333;
+      color: white;
+      border: 1px solid #666;
+    }
+    label {
+      display: block;
+      margin-top: 30px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎥 Adaptive HLS Streaming</h1>
+  
+  <video id="video" controls></video>
+
+  <label for="qualitySelect">Choose Quality:</label>
+  <select id="qualitySelect">
+    <option value="auto">Auto (Adaptive)</option>
+  </select>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    const video = document.getElementById('video');
+    const qualitySelect = document.getElementById('qualitySelect');
+    const manifestUrl = 'playlist.m3u8'; // Update if you renamed to master.m3u8
+
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(manifestUrl);
+      hls.attachMedia(video);
+
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        // Populate quality options
+        hls.levels.forEach((level, i) => {
+          const option = document.createElement('option');
+          option.value = i;
+          option.text = `${level.height}p`;
+          qualitySelect.appendChild(option);
+        });
+
+        video.play();
+      });
+
+      qualitySelect.addEventListener('change', () => {
+        const val = qualitySelect.value;
+        hls.currentLevel = val === 'auto' ? -1 : parseInt(val);
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Native HLS support (Safari)
+      video.src = manifestUrl;
+      video.addEventListener('loadedmetadata', () => {
+        video.play();
+      });
+    } else {
+      alert('HLS is not supported in this browser.');
+    }
+  </script>
+</body>
+</html>
